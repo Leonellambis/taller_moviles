@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vista Previa Interactiva — Hoja de Vida (Vue.js + Ionic)</title>
+    <!-- Estilos y Web Components de Ionic Framework vía CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+    <!-- Vue 3 vía CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f1f5f9;
+        color: #1e293b;
+        padding-bottom: 84px;
+      }
+
+      .barra-superior {
+        background: linear-gradient(135deg, #3880ff, #4c51bf);
+        color: #ffffff;
+        padding: 14px 20px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      .contenedor-principal {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 12px 16px 32px;
+      }
+
+      /* 1. Encabezado: Nombre, Identidad y Separador */
+      .encabezado-contenedor {
+        text-align: center;
+        padding: 24px 16px 8px;
+        background: #ffffff;
+        border-radius: 16px;
+        margin-top: 12px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+      }
+
+      .avatar-circulo {
+        width: 78px;
+        height: 78px;
+        margin: 0 auto 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3880ff, #5260ff);
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 16px rgba(56, 128, 255, 0.35);
+      }
+
+      .nombre-principal {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .identidad-badge {
+        display: inline-block;
+        margin: 10px 0 6px;
+        padding: 6px 16px;
+        background-color: #e0ecff;
+        color: #1d4ed8;
+        border-radius: 999px;
+        font-size: 0.95rem;
+      }
+
+      .profesion-texto {
+        margin: 6px 0 18px;
+        color: #64748b;
+        font-size: 1rem;
+        font-weight: 500;
+      }
+
+      /* Separador (línea debajo del nombre e identidad) */
+      .linea-separadora {
+        border: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #3880ff, #5260ff, transparent);
+        margin: 16px auto 8px;
+        width: 92%;
+        border-radius: 2px;
+      }
+
+      /* Contador de Me gusta / No me gusta */
+      .reacciones-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin: 16px 0;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .reacciones-titulo {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1.02rem;
+        display: block;
+      }
+
+      .reacciones-subtitulo {
+        font-size: 0.88rem;
+        color: #64748b;
+      }
+
+      .botones-reaccion {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .btn-reaccion {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+
+      .btn-reaccion:active {
+        transform: scale(0.95);
+      }
+
+      .btn-like {
+        background-color: #16a34a;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+      }
+
+      .btn-like:hover {
+        background-color: #15803d;
+      }
+
+      .btn-dislike {
+        background-color: #fff1f2;
+        color: #e11d48;
+        border: 1.5px solid #fda4af;
+      }
+
+      .btn-dislike:hover {
+        background-color: #ffe4e6;
+      }
+
+      /* Tarjetas de secciones */
+      .seccion-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 20px;
+        margin: 16px 0;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+      }
+
+      .titulo-seccion {
+        margin: 0 0 16px;
+        font-size: 1.22rem;
+        font-weight: 700;
+        color: #1e293b;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 10px;
+      }
+
+      .grid-datos {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+
+      .dato-item {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .dato-etiqueta {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 3px;
+      }
+
+      .dato-valor {
+        font-size: 0.98rem;
+        color: #0f172a;
+        font-weight: 600;
+      }
+
+      /* Items reutilizables de Experiencia Académica y Laboral */
+      .item-reutilizable {
+        background-color: #f8fafc;
+        border-left: 4px solid #3880ff;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+      }
+
+      .item-reutilizable:last-child {
+        margin-bottom: 0;
+      }
+
+      .item-cabecera {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .item-titulo {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .item-entidad {
+        margin: 2px 0 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #3880ff;
+      }
+
+      .item-badges {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .badge-tipo {
+        background-color: #dbeafe;
+        color: #1e40af;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+      }
+
+      .badge-periodo {
+        background-color: #e2e8f0;
+        color: #334155;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 999px;
+      }
+
+      .item-descripcion {
+        margin: 8px 0 0;
+        font-size: 0.9rem;
+        color: #475569;
+        line-height: 1.45;
+      }
+
+      /* Barrita de estado inferior */
+      .barra-estado-fija {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #0f172a;
+        color: #f8fafc;
+        padding: 12px 20px;
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+      }
+
+      .barra-estado-contenedor {
+        max-width: 880px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .indicador-estado {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.92rem;
+      }
+
+      .punto-verde {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #22c55e;
+        box-shadow: 0 0 8px #22c55e;
+        display: inline-block;
+      }
+
+      .enlace-sitio-propio {
+        background-color: #3880ff;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: background-color 0.15s ease;
+      }
+
+      .enlace-sitio-propio:hover {
+        background-color: #2563eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Barra de título superior -->
+      <header class="barra-superior">
+        📱 Hoja de Vida — Aplicación con Vue.js + Ionic
+      </header>
+
+      <main class="contenedor-principal">
+        <!-- 1. ARRIBA: Nombre e Identidad + DEBAJO: Separador de línea -->
+        <encabezado-perfil
+          :nombre-completo="persona.nombre + ' ' + persona.apellido"
+          :identidad="persona.identidad"
+          :profesion="persona.profesion"
+        ></encabezado-perfil>
+
+        <!-- CONTADOR DE MANITO ARRIBA 👍 Y MANITO ABAJO 👎 (Reactividad en Vue) -->
+        <contador-reacciones></contador-reacciones>
+
+        <!-- 2. DEBAJO: Datos de una persona (Nombre, Apellido, Dirección, Correo, Género, etc.) -->
+        <datos-personales :persona="persona"></datos-personales>
+
+        <!-- 3. DEBAJO: Experiencia Académica, Cursos, etc. -->
+        <section class="seccion-card">
+          <h2 class="titulo-seccion">🎓 Experiencia Académica y Cursos</h2>
+          <tarjeta-item
+            v-for="estudio in estudiosYCursos"
+            :key="estudio.id"
+            :titulo="estudio.titulo"
+            :entidad="estudio.entidad"
+            :periodo="estudio.periodo"
+            :tipo="estudio.tipo"
+            :descripcion="estudio.descripcion"
+          ></tarjeta-item>
+        </section>
+
+        <!-- 4. DEBAJO: Experiencias Laborales -->
+        <section class="seccion-card">
+          <h2 class="titulo-seccion">💼 Experiencia Laboral</h2>
+          <tarjeta-item
+            v-for="trabajo in experienciasLaborales"
+            :key="trabajo.id"
+            :titulo="trabajo.titulo"
+            :entidad="trabajo.entidad"
+            :periodo="trabajo.periodo"
+            :tipo="trabajo.tipo"
+            :descripcion="trabajo.descripcion"
+          ></tarjeta-item>
+        </section>
+      </main>
+
+      <!-- 5. POR ÚLTIMO: Barrita de estado que lleva a un sitio propio -->
+      <barra-estado
+        estado-texto="En línea — Disponible para proyectos y ofertas laborales"
+        :url-sitio-propio="persona.urlSitioPropio"
+        nombre-sitio="Ir a mi Sitio Propio / Portafolio"
+      ></barra-estado>
+    </div>
+
+    <script>
+      const { createApp, ref, reactive, computed } = Vue
+
+      // Componente 1: Encabezado (Nombre, Identidad y Separador de Línea)
+      const EncabezadoPerfil = {
+        props: ['nombreCompleto', 'identidad', 'profesion'],
+        template: `
+          <div class="encabezado-contenedor">
+            <div class="avatar-circulo">{{ nombreCompleto.charAt(0) }}</div>
+            <h1 class="nombre-principal">{{ nombreCompleto }}</h1>
+            <p class="identidad-badge">
+              <strong>Documento de Identidad (C.C.):</strong> {{ identidad }}
+            </p>
+            <p class="profesion-texto">{{ profesion }}</p>
+            <hr class="linea-separadora" />
+          </div>
+        `
+      }
+
+      // Componente 2: Contador Reactivo de Me Gusta (👍) y No Me Gusta (👎)
+      const ContadorReacciones = {
+        setup() {
+          const meGusta = ref(12)
+          const noMeGusta = ref(2)
+
+          const incrementarMeGusta = () => {
+            meGusta.value++
+          }
+
+          const incrementarNoMeGusta = () => {
+            noMeGusta.value++
+          }
+
+          const porcentajeAprobacion = computed(() => {
+            const total = meGusta.value + noMeGusta.value
+            return total === 0 ? 0 : Math.round((meGusta.value / total) * 100)
+          })
+
+          return { meGusta, noMeGusta, incrementarMeGusta, incrementarNoMeGusta, porcentajeAprobacion }
+        },
+        template: `
+          <div class="reacciones-card">
+            <div>
+              <span class="reacciones-titulo">¿Qué te parece este perfil profesional?</span>
+              <span class="reacciones-subtitulo">
+                Aprobación: <strong>{{ porcentajeAprobacion }}%</strong> ({{ meGusta + noMeGusta }} votos registrados)
+              </span>
+            </div>
+            <div class="botones-reaccion">
+              <button class="btn-reaccion btn-like" @click="incrementarMeGusta">
+                <span>👍</span>
+                <span>Me gusta ({{ meGusta }})</span>
+              </button>
+              <button class="btn-reaccion btn-dislike" @click="incrementarNoMeGusta">
+                <span>👎</span>
+                <span>No me gusta ({{ noMeGusta }})</span>
+              </button>
+            </div>
+          </div>
+        `
+      }
+
+      // Componente 3: Datos Personales
+      const DatosPersonales = {
+        props: ['persona'],
+        template: `
+          <section class="seccion-card">
+            <h2 class="titulo-seccion">👤 Datos Personales</h2>
+            <div class="grid-datos">
+              <div class="dato-item">
+                <span class="dato-etiqueta">Nombres</span>
+                <span class="dato-valor">{{ persona.nombre }}</span>
+              </div>
+              <div class="dato-item">
+                <span class="dato-etiqueta">Apellidos</span>
+                <span class="dato-valor">{{ persona.apellido }}</span>
+              </div>
+              <div class="dato-item">
+                <span class="dato-etiqueta">Identificación</span>
+                <span class="dato-valor">{{ persona.identidad }}</span>
+              </div>
+              <div class="dato-item">
+                <span class="dato-etiqueta">Género</span>
+                <span class="dato-valor">{{ persona.genero }}</span>
+              </div>
+              <div class="dato-item">
+                <span class="dato-etiqueta">Dirección</span>
+                <span class="dato-valor">{{ persona.direccion }}</span>
+              </div>
+              <div class="dato-item">
+                <span class="dato-etiqueta">Correo Electrónico</span>
+                <span class="dato-valor">{{ persona.correo }}</span>
+              </div>
+              <div class="dato-item">
+                <span class="dato-etiqueta">Teléfono / Celular</span>
+                <span class="dato-valor">{{ persona.telefono }}</span>
+              </div>
+              <div class="dato-item">
+                <span class="dato-etiqueta">Ciudad / País</span>
+                <span class="dato-valor">{{ persona.ciudad }}</span>
+              </div>
+            </div>
+          </section>
+        `
+      }
+
+      // Componente 4: Tarjeta Reutilizable (Académica y Laboral)
+      const TarjetaItem = {
+        props: ['titulo', 'entidad', 'periodo', 'tipo', 'descripcion'],
+        template: `
+          <div class="item-reutilizable">
+            <div class="item-cabecera">
+              <div>
+                <h3 class="item-titulo">{{ titulo }}</h3>
+                <p class="item-entidad">{{ entidad }}</p>
+              </div>
+              <div class="item-badges">
+                <span v-if="tipo" class="badge-tipo">{{ tipo }}</span>
+                <span class="badge-periodo">{{ periodo }}</span>
+              </div>
+            </div>
+            <p v-if="descripcion" class="item-descripcion">{{ descripcion }}</p>
+          </div>
+        `
+      }
+
+      // Componente 5: Barrita de Estado Inferior con Enlace a Sitio Propio
+      const BarraEstado = {
+        props: ['estadoTexto', 'urlSitioPropio', 'nombreSitio'],
+        template: `
+          <footer class="barra-estado-fija">
+            <div class="barra-estado-contenedor">
+              <div class="indicador-estado">
+                <span class="punto-verde"></span>
+                <span><strong>Estado:</strong> {{ estadoTexto }}</span>
+              </div>
+              <a class="enlace-sitio-propio" :href="urlSitioPropio" target="_blank" rel="noopener noreferrer">
+                🌐 {{ nombreSitio }} ↗
+              </a>
+            </div>
+          </footer>
+        `
+      }
+
+      // Creación y montaje de la aplicación Vue
+      const app = createApp({
+        setup() {
+          const persona = reactive({
+            nombre: 'Leonel',
+            apellido: 'Lambis',
+            identidad: '1.098.765.432',
+            profesion: 'Desarrollador de Aplicaciones Móviles & Web (Vue.js / Ionic)',
+            genero: 'Masculino',
+            direccion: 'Calle 45 # 23 - 10, Barrio Centro',
+            correo: 'lambisxd@gmail.com',
+            telefono: '+57 300 123 4567',
+            ciudad: 'Colombia',
+            urlSitioPropio: 'https://github.com/Leonellambis'
+          })
+
+          const estudiosYCursos = ref([
+            {
+              id: 1,
+              titulo: 'Ingeniería de Sistemas / Tecnología en Desarrollo de Software',
+              entidad: 'Universidad / Institución Universitaria',
+              periodo: '2022 - Actualidad',
+              tipo: 'Pregrado',
+              descripcion: 'Formación en desarrollo móvil híbrido, arquitectura de software, bases de datos y programación orientada a objetos.'
+            },
+            {
+              id: 2,
+              titulo: 'Curso Profesional de Desarrollo Móvil con Ionic, Capacitor y Vue 3',
+              entidad: 'Academia Online (Udemy / Platzi)',
+              periodo: '2025 (60 horas)',
+              tipo: 'Curso Certificado',
+              descripcion: 'Creación de componentes reactivos en Vue.js, integración con Capacitor y despliegue en dispositivos Android.'
+            },
+            {
+              id: 3,
+              titulo: 'Diplomado en Desarrollo Web Frontend Moderno (JavaScript ES6+, HTML5 y CSS3)',
+              entidad: 'SENA / Ministerio TIC',
+              periodo: '2024 (120 horas)',
+              tipo: 'Diplomado',
+              descripcion: 'Diseño de interfaces responsivas, consumo de APIs REST y control de versiones con Git y GitHub.'
+            }
+          ])
+
+          const experienciasLaborales = ref([
+            {
+              id: 1,
+              titulo: 'Desarrollador Frontend & Móvil Junior',
+              entidad: 'Soluciones Digitales S.A.S.',
+              periodo: 'Enero 2025 - Actualidad',
+              tipo: 'Tiempo Completo',
+              descripcion: 'Desarrollo y mantenimiento de aplicaciones móviles híbridas utilizando Vue.js, Ionic Framework y Capacitor, optimizando tiempos de carga y experiencia de usuario.'
+            },
+            {
+              id: 2,
+              titulo: 'Practicante / Auxiliar de Desarrollo Web',
+              entidad: 'InnovaTech Colombia',
+              periodo: 'Febrero 2024 - Diciembre 2024',
+              tipo: 'Práctica Profesional',
+              descripcion: 'Maquetación de módulos web interactivos, creación de componentes reutilizables en Vue y soporte técnico a plataformas internas.'
+            }
+          ])
+
+          return { persona, estudiosYCursos, experienciasLaborales }
+        }
+      })
+
+      app.component('encabezado-perfil', EncabezadoPerfil)
+      app.component('contador-reacciones', ContadorReacciones)
+      app.component('datos-personales', DatosPersonales)
+      app.component('tarjeta-item', TarjetaItem)
+      app.component('barra-estado', BarraEstado)
+
+      app.mount('#app')
+    </script>
+  </body>
+</html>
+
